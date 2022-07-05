@@ -34,8 +34,6 @@ extern "C" int start()
 	{
 		unsigned int now_count = get_cycle_count();
 		unsigned int elapsed = now_count - last_count;
-		if (elapsed == 4155144)
-			return 56;
 		if (now_count < last_count)
 		{
 			last_count = now_count;
