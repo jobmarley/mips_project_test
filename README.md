@@ -4,8 +4,7 @@ The project is compiled with clang.
 It requires clang to be installed in "C:\Program Files\LLVM" (default location).
 VSMipsProjectExtension also needs to be installed.
 
-It demonstrate basic timer/debugbreak/memory mapped registers to make the leds blink (YEAH!)
-
+It demonstrate basic timer/debugbreak/memory mapped registers to make the leds blink (YAY!)
 ## bootloader
 As of now the processor starts executing at 0. It is pretty difficult to compile an elf with instruction at 0 (it erases the headers etc...) so
 the best plan is probably to compile a raw binary file, that will then load an elf in memory and call the entry point.
