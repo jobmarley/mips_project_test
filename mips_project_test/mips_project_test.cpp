@@ -17,11 +17,7 @@ unsigned int get_cycle_count()
 	asm("jr $ra");
 }
 
-//[[gnu::naked]]
-void debugbreak()
-{
-	asm("sdbbp");
-}
+#define debugbreak() asm("sdbbp")
 
 extern "C" int start()
 {
