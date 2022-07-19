@@ -18,3 +18,7 @@ To launch the debugger [MipsRemoteDebugger](https://github.com/jobmarley/VSMipsP
 Typical debug settings look like this:
 
 ![image](https://user-images.githubusercontent.com/99695100/177378302-60f3fbac-7b1e-452b-bf9b-d04ab1696cd7.png)
+
+## convert_to_coe.py
+It takes files and offsets as arguments and generate a .coe that contains the merged files data.  
+It's usefull for testing or to initialize a block ram with an executable.
