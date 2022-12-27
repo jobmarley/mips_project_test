@@ -22,6 +22,8 @@ extern "C" int main()
 }
 unsigned int* leds = (unsigned int*)0x80000004;
 
+#define debugbreak() asm("sdbbp")
+
 [[gnu::naked]]
 unsigned int get_cycle_count()
 {
@@ -29,8 +31,85 @@ unsigned int get_cycle_count()
 	asm("jr $ra");
 }
 
-#define debugbreak() asm("sdbbp")
+[[gnu::naked]]
+unsigned int get_performance_count()
+{
+	asm("mfc0 $v0, $9, 0b110");
+	asm("jr $ra");
+}
 
+char* g_console_buffer = (char*)0x30000004;
+unsigned int* g_console_buffer_size = (unsigned int*)0x30000000;
+
+
+unsigned int strlen(const char* s)
+{
+	unsigned int l = 0;
+	while (s[l] != '\0')
+		++l;
+	return l;
+}
+char* strcpy(
+	char* strDestination,
+	const char* strSource
+)
+{
+	char* result = strDestination;
+	while (*strSource != '\0')
+		*strDestination++ = *strSource++;
+	*strDestination = '\0';
+	return result;
+}
+void init_console()
+{
+	*g_console_buffer_size = 0;
+}
+void kprint(const char* s)
+{
+	unsigned int len = strlen(s);
+	char* end = g_console_buffer + *g_console_buffer_size + len;
+
+	if (end >= g_console_buffer + 0xFFC)
+		return; // overflow
+
+	strcpy(g_console_buffer + *g_console_buffer_size, s);
+	*g_console_buffer_size = *g_console_buffer_size + len;
+}
+
+template<typename T>
+void swap(T& t1, T& t2)
+{
+	T tmp = t1;
+	t1 = t2;
+	t2 = tmp;
+}
+
+void utoa(unsigned int i, char* buffer, int base = 10)
+{
+	int count = 0;
+	do
+	{
+		int m = i % base;
+		i = i / base;
+		const char table[] = "0123456789ABCDEF";
+		buffer[count++] = table[m];
+	} while (i > 0);
+
+	for (int j = 0, k = 0; j < count; j += 2, k++)
+		swap(buffer[k], buffer[count - k - 1]);
+
+	buffer[count] = '\0';
+}
+void itoa(int i, char* buffer, int base = 10)
+{
+	if (i < 0)
+	{
+		i = -i;
+		buffer[0] = '-';
+		++buffer;
+	}
+	utoa(i, buffer, base);
+}
 extern "C" int start()
 {
 	unsigned int last_count = 0;
@@ -38,29 +117,33 @@ extern "C" int start()
 
 	unsigned int toggle = 0;
 	*leds = 0;
+	init_console();
+	kprint("start...\n");
+
+	int secondCount = 0;
 	while (true)
 	{
 		unsigned int now_count = get_cycle_count();
 		unsigned int elapsed = now_count - last_count;
-		debugbreak();
-		if (now_count < last_count)
-		{
-			last_count = now_count;
-		}
-		else if (elapsed > 50000000)
+
+		unsigned int max_count = 100000000;
+		if (elapsed > max_count)
 		{
 			if (toggle == 0)
 			{
 				toggle = 1;
 				*leds = 1;
-				debugbreak();
+				char s[10] = {};
+				itoa(++secondCount, s);
+				kprint(s);
+				kprint(" seconds elapsed.\n");
 			}
 			else
 			{
 				toggle = 0;
 				*leds = 0;
 			}
-			last_count = now_count;
+			last_count += max_count;
 		}
 	}
 	return 55;
