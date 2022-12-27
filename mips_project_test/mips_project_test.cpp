@@ -126,7 +126,7 @@ extern "C" int start()
 		unsigned int now_count = get_cycle_count();
 		unsigned int elapsed = now_count - last_count;
 
-		unsigned int max_count = 100000000;
+		unsigned int max_count = 50000000;
 		if (elapsed > max_count)
 		{
 			if (toggle == 0)
