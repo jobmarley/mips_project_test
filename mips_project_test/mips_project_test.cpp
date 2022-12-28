@@ -34,7 +34,7 @@ unsigned int get_cycle_count()
 [[gnu::naked]]
 unsigned int get_performance_count()
 {
-	asm("mfc0 $v0, $9, 0b110");
+	asm("mfc0 $v0, $9, 0b001");
 	asm("jr $ra");
 }
 
@@ -112,21 +112,32 @@ void itoa(int i, char* buffer, int base = 10)
 }
 extern "C" int start()
 {
-	unsigned int last_count = 0;
-	last_count = get_cycle_count();
+	unsigned int start_count = get_cycle_count();
+	unsigned int start_perf_count = get_performance_count();
 
 	unsigned int toggle = 0;
 	*leds = 0;
 	init_console();
 	kprint("start...\n");
 
+
+	unsigned int max_count = 50000000; // 0.5s for a toggle, blink every 1 second
+	unsigned last_tick = start_count;
+
 	int secondCount = 0;
 	while (true)
 	{
 		unsigned int now_count = get_cycle_count();
-		unsigned int elapsed = now_count - last_count;
+		unsigned int perf_count = get_performance_count();
+		unsigned int elapsed = now_count - last_tick;
+		unsigned int elapsed_perf = perf_count - start_perf_count;
 
-		unsigned int max_count = 50000000;
+		unsigned total_elapsed = now_count - start_count;
+		if (total_elapsed > 1000000000) // 10s at 100Mhz
+		{
+			debugbreak();
+		}
+
 		if (elapsed > max_count)
 		{
 			if (toggle == 0)
@@ -143,7 +154,7 @@ extern "C" int start()
 				toggle = 0;
 				*leds = 0;
 			}
-			last_count += max_count;
+			last_tick += max_count; // do not use now_count, so not to drift. Since elapsed wont be exactly max_count
 		}
 	}
 	return 55;
