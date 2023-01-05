@@ -22,7 +22,7 @@ def parse_options(args):
     while i < len(args):
         if args[i] == '-o':
             if i + 1 >= len(args):
-                print('argument -o requires a filename')
+                print('convert_to_coe.py: Command line error CTC0001 : argument -o requires a filename')
                 exit()
             global output_path
             output_path = args[i + 1]
@@ -34,8 +34,8 @@ def parse_options(args):
 
 def main():
     if len(sys.argv) < 2:
-        print('Wrong arguments. Correct syntax is convert_to_coe.py <filename1> <filename2>')
-        exit()
+        print('convert_to_coe.py: Command line error CTC0001 : Wrong arguments. Correct syntax is convert_to_coe.py <filename1>=<ofs> <filename2>=<ofs> -o <outpath>')
+        exit(1)
         
     filenames = parse_options(sys.argv[1:])
     result = []
@@ -45,20 +45,21 @@ def main():
         parts = s.split('=')
         fn = parts[0]
         if not os.path.isfile(fn):
-            print('{} doesnt exist!'.format(fn))
-            exit()
+            print('convert_to_coe.py: Command line error CTC0001 : {} doesnt exist!'.format(fn))
+            exit(1)
 
         if len(parts) < 2:
-            ofs = parse_int(input('enter offset for file {}\n'.format(fn)))
+            print('convert_to_coe.py: Command line error CTC0001 : no offset for file {}, correct syntax is <filename>=<offset>'.format(fn))
+            exit(1)
         else:
             ofs = parse_int(parts[1])
             
         if ofs % 4 > 0:
-            print('offset must be a multiple of 4')
-            exit()
+            print('convert_to_coe.py: Command line error CTC0001 : offset must be a multiple of 4')
+            exit(1)
         if ofs < current_ofs:
-            print('offset must be bigger than current file size')
-            exit()
+            print('convert_to_coe.py: Command line error CTC0001 : offset must be bigger than current file size')
+            exit(1)
 
 
 
@@ -69,18 +70,20 @@ def main():
         with open(fn, 'rb') as f:
             content = f.read()
             if len(content) % 4 > 0:
-                print('file size must be a multiple of 4 ({})'.format(fn))
-                exit()
+                print('convert_to_coe.py: Command line error CTC0001 : file size must be a multiple of 4 ({})'.format(fn))
+                exit(1)
             for i in range(0, len(content), 4):
                 result.append('{0:08X}'.format(int.from_bytes(content[i:i+4], 'little')))
                 current_ofs = current_ofs + 4
        
     global output_path
     if not output_path:
-        output_path = input('enter output filename:\n')
+        print('convert_to_coe.py: Command line error CTC0001 : no output file specified, use -o <filename>')
+        exit(1)
 
     write_coe_file('{}'.format(output_path), result)
-    print('DONE')
+    print('{} successfully merged'.format(output_path))
+    exit(0)
 
 if __name__ == "__main__": 
     main()
